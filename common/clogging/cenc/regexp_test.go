@@ -40,3 +40,9 @@ func BenchmarkFeiBuhuo(b *testing.B) {
 	}
 	b.StopTimer()
 }
+
+func TestFormatRegexp(t *testing.T) {
+	spec := "%{level:.4s} suffix"
+	matches := formatRegexp.FindAllStringSubmatchIndex(spec, -1)
+	t.Log(matches)
+}
