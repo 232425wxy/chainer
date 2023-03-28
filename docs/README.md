@@ -6,5 +6,4 @@ Chainer 是一个联盟链学习平台，基于 [Hyperledger/fabric](https://git
 
 - [中文文档](https://232425wxy.github.io/chainer/Chinese/)
 - [English Documentation](https://232425wxy.github.io/chainer/English/)
-- [Example Notebooks](https://232425wxy.github.io/chainer/Notebooks/): 学习 fabric 源码时记录的笔记都在这里。
 - [API Reference](https://232425wxy.github.io/chainer/API/): API 接口介绍。
