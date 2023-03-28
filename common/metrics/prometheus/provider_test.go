@@ -72,6 +72,8 @@ func TestProvider(t *testing.T) {
 
 	histogram := p.NewHistogram(histogramOpts) // 默认的 buckets 是 []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10}
 	histogram.With("http", "www.baidu.com", "https", "github.com").Observe(0.8) // 大于 0.8 的 bucket 只有 {1, 2.5, 5, 10}
+	histogram.With("http", "www.baidu.com", "https", "github.com").Observe(2.8) // 大于 2.8 的 bucket 只有 {5, 10}
+	histogram.With("http", "www.baidu.com", "https", "github.com").Observe(3.1) // 大于 3.1 的 bucket 只有 {5, 10}
 	histogram.With("http", "twitter", "https", "csdn.com").Observe(0.4) // 大于 0.4 的 bucket 有 {0.5, 1, 2.5, 5, 10}
 
 	resp, err = client.Get(fmt.Sprintf("http://%s/metrics", server.Listener.Addr().String()))
