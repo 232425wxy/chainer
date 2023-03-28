@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"runtime"
+	"strings"
+	"sync"
+	"sync/atomic"
 
 	"go.uber.org/zap/zapcore"
 )
@@ -11,7 +15,7 @@ import (
 // formatRegexp 匹配案例：
 // %{color:red}%{level:debug}  匹配结果：共找到两处匹配：%{color:red}和%{level:debug}；
 // %{color}%{messagee}  匹配结果：共找到一处匹配：%{color}；
-// %{id:123}xxxx%{module::p2p}  匹配结果：共找到两处匹配：%{id:123}和%{module:p2p}。
+// %{id:123}xxxx%{module::p2p}  匹配结果：共找到两处匹配：%{id:123}和%{module::p2p}。
 var formatRegexp = regexp.MustCompile(`%{(color|id|level|message|module|shortfunc|time)(?::(.*?))?}`)
 
 func ParseFormat(spec string) ([]Formatter, error) {
@@ -56,10 +60,51 @@ func NewFormatter(verb, format string) (Formatter, error) {
 	switch verb {
 	case "color":
 		return newColorFormatter(format)
+	case "level":
+		return newLevelFormatter(format), nil
+	case "message":
+		return newMessageFormatter(format), nil
+	case "shortfunc":
+		return newShortFuncFormatter(format), nil
+	case "time":
+		return newTimeFormatter(format), nil
+	case "id":
+		return newSequenceFormatter(format), nil
+	case "module":
+		return newModuleFormatter(format), nil
 	default:
 		return nil, fmt.Errorf("unknown verb: %s", verb)
 	}
 }
+
+// => MultiFormatter
+
+type MultiFormatter struct {
+	mutex sync.Mutex
+	formatters []Formatter
+}
+
+func NewMultiFormatter(formatters ...Formatter) *MultiFormatter {
+	return &MultiFormatter{
+		formatters: formatters,
+	}
+}
+
+func (mf *MultiFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
+	mf.mutex.Lock()
+	for _, formatter := range mf.formatters {
+		formatter.Format(w, entry, fields)
+	}
+	mf.mutex.Unlock()
+}
+
+func (mf *MultiFormatter) SetFormatters(formatters []Formatter) {
+	mf.mutex.Lock()
+	mf.formatters = formatters
+	mf.mutex.Unlock()
+}
+
+// => ColorFormatter
 
 type ColorFormatter struct {
 	Bold  bool
@@ -99,13 +144,113 @@ func (cf ColorFormatter) LevelColor(l zapcore.Level) Color {
 func (cf ColorFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
 	switch {
 	case cf.Bold:
-		fmt.Fprintf(w, cf.LevelColor(entry.Level).Bold())
+		fmt.Fprint(w, cf.LevelColor(entry.Level).Bold())
 	case cf.Reset:
-		fmt.Fprintf(w, ResetColor())
+		fmt.Fprint(w, ResetColor())
 	default:
-		fmt.Fprintf(w, cf.LevelColor(entry.Level).Normal())
+		fmt.Fprint(w, cf.LevelColor(entry.Level).Normal())
 	}
 }
+
+// => LevelFormatter
+
+type LevelFormatter struct {
+	FormatVerb string
+}
+
+func newLevelFormatter(fv string) LevelFormatter {
+	return LevelFormatter{FormatVerb: "%" + stringOrDefault(fv, "s")}
+}
+
+func (lf LevelFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
+	fmt.Fprintf(w, lf.FormatVerb, entry.Level.CapitalString())
+}
+
+// => MessageFormatter
+
+type MessageFormatter struct {
+	FormatVerb string
+}
+
+func newMessageFormatter(fv string) MessageFormatter {
+	return MessageFormatter{FormatVerb: "%" + stringOrDefault(fv, "s")}
+}
+
+func (mf MessageFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
+	fmt.Fprintf(w, mf.FormatVerb, strings.TrimRight(entry.Message, "\n"))
+}
+
+// => ShortFuncFormatter
+
+type ShortFuncFormatter struct {
+	FormatVerb string
+}
+
+func newShortFuncFormatter(fv string) ShortFuncFormatter {
+	return ShortFuncFormatter{FormatVerb: "%" + stringOrDefault(fv, "s")}
+}
+
+func (sf ShortFuncFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
+	f := runtime.FuncForPC(entry.Caller.PC)
+	if f == nil {
+		fmt.Fprintf(w, sf.FormatVerb, "(unknown)")
+		return
+	}
+	fname := f.Name()
+	funcIdx := strings.LastIndex(fname, ".")
+	fmt.Fprintf(w, sf.FormatVerb, fname[funcIdx+1:])
+}
+
+// => TimeFormatter
+
+type TimeFormatter struct {
+	Layout string
+}
+
+func newTimeFormatter(layout string) TimeFormatter {
+	return TimeFormatter{Layout: stringOrDefault(layout, "2006-01-02T15:04:05.999Z07:00")}
+}
+
+func (tf TimeFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
+	fmt.Fprint(w, entry.Time.Format(tf.Layout))
+}
+
+// => SequenceFormatter
+
+// 全局变量，供所有 SequenceFormatter 实例使用。
+var sequence uint64
+
+func SetSequence(s uint64) {
+	atomic.StoreUint64(&sequence, s)
+}
+
+type SequenceFormatter struct {
+	FormatVerb string
+}
+
+func newSequenceFormatter(fv string) SequenceFormatter {
+	return SequenceFormatter{FormatVerb: "%" + stringOrDefault(fv, "d")}
+}
+
+func (sf SequenceFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
+	fmt.Fprintf(w, sf.FormatVerb, atomic.AddUint64(&sequence, 1))
+}
+
+// => ModuleFormatter
+
+type ModuleFormatter struct {
+	FormatVerb string
+}
+
+func newModuleFormatter(fv string) ModuleFormatter {
+	return ModuleFormatter{FormatVerb: "%" + stringOrDefault(fv, "s")}
+}
+
+func (mf ModuleFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
+	fmt.Fprintf(w, mf.FormatVerb, entry.LoggerName)
+}
+
+// => StringFormatter
 
 type StringFormatter struct {
 	Value string
@@ -114,4 +259,11 @@ type StringFormatter struct {
 // Format StringFormatter 直接就是将字符串 Value 写入到 io.Writer 中。
 func (s StringFormatter) Format(w io.Writer, entry zapcore.Entry, fields []zapcore.Field) {
 	fmt.Fprintf(w, "%s", s.Value)
+}
+
+func stringOrDefault(str, dlt string) string {
+	if str != "" {
+		return str
+	}
+	return dlt
 }
