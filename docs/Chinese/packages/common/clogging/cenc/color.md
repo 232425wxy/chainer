@@ -1,3 +1,7 @@
+---
+sort: 1
+---
+
 # color.go
 
 ## 简介
@@ -60,7 +64,7 @@ func TestNormalAndBold(t *testing.T) {
 ```
 <img src="../../../../../pics/normal_bold_unreset_color_print.PNG">
 
-那么，如果想重置打印的颜色该怎么办呢？`color.go` 文件提供了一个 `ResetColor()` 方法，该方法实际上就是返回 "\x1b[0m" 字符串的，我们在上述的例子里添加该方法，看看效果是怎样的：
+那么，如果想重置打印的颜色该怎么办呢？`color.go` 文件提供了一个 (ResetColor())[https://github.com/232425wxy/chainer/blob/main/common/clogging/cenc/color.go#L36] 方法，该方法实际上就是返回 "\x1b[0m" 字符串，我们在上述的例子里添加该方法，看看效果是怎样的：
 ```go
 func TestNormalAndBold(t *testing.T) {
 	cyanNormalColor := ColorCyan.Normal()
