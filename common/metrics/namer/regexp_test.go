@@ -100,6 +100,14 @@ func TestFormatRegexp(t *testing.T) {
 				"",
 			},
 		},
+		{
+			desc: "name_%{#?1_##??11__}",
+			format: "name_%{}",
+			cmp: []string{
+				"%{#?1_##??11__}",
+				"#?1_##??11__",
+			},
+		},
 	}
 
 	for _, test := range tests {
