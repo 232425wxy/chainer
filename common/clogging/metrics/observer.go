@@ -37,6 +37,7 @@ func NewObserver(provider metrics.Provider) *Observer {
 	}
 }
 
+// Check 传入的两个参数，只用到了第一个参数。
 func (o *Observer) Check(entry zapcore.Entry, ce *zapcore.CheckedEntry) {
 	o.CheckedCounter.With("level", entry.Level.String()).Add(1)
 }

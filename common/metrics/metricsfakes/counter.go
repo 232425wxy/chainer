@@ -71,13 +71,13 @@ func (fake *Counter) With(arg1 ...string) metrics.Counter {
 
 // WithCallCount 返回 With 方法被调用的次数。
 func (fake *Counter) WithCallCount() int {
-	fake.withMutex.Lock()
-	defer fake.withMutex.Unlock()
+	fake.withMutex.RLock()
+	defer fake.withMutex.RUnlock()
 	return len(fake.withArgsForCall)
 }
 
 // WithCalls 设置 WithStub，func(...string) metrics.Counter。
-func (fake *Counter) WithCalls(stub func(...string) metrics.Counter) {
+func (fake *Counter) SetWithStub(stub func(...string) metrics.Counter) {
 	fake.withMutex.Lock()
 	defer fake.withMutex.Unlock()
 	fake.WithStub = stub
@@ -85,20 +85,20 @@ func (fake *Counter) WithCalls(stub func(...string) metrics.Counter) {
 
 // WithArgsForCall 返回第 i+1 次调用 With 方法传入的参数，[]string。
 func (fake *Counter) WithArgsForCall(i int) []string {
-	fake.withMutex.Lock()
-	defer fake.withMutex.Unlock()
+	fake.withMutex.RLock()
+	defer fake.withMutex.RUnlock()
 	argsForCall := fake.withArgsForCall[i]
 	return argsForCall.arg1
 }
 
-func (fake *Counter) WithReturns(result1 metrics.Counter) {
+func (fake *Counter) SetWithReturns(result1 metrics.Counter) {
 	fake.withMutex.Lock()
 	defer fake.withMutex.Unlock()
 	fake.WithStub = nil
 	fake.withReturns = struct{result1 metrics.Counter}{result1}
 }
 
-func (fake *Counter) WithReturnsOnCall(i int, result1 metrics.Counter) {
+func (fake *Counter) SetWithReturnsOnCall(i int, result1 metrics.Counter) {
 	fake.withMutex.Lock()
 	defer fake.withMutex.Unlock()
 	fake.WithStub = nil
@@ -109,12 +109,12 @@ func (fake *Counter) WithReturnsOnCall(i int, result1 metrics.Counter) {
 }
 
 func (fake *Counter) Invocations() map[string][][]interface{} {
-	fake.invocationsMutex.Lock()
-	defer fake.invocationsMutex.Unlock()
-	fake.addMutex.Lock()
-	defer fake.addMutex.Unlock()
-	fake.withMutex.Lock()
-	defer fake.withMutex.Unlock()
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.addMutex.RLock()
+	defer fake.addMutex.RUnlock()
+	fake.withMutex.RLock()
+	defer fake.withMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
