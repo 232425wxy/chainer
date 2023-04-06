@@ -107,7 +107,7 @@ func (cl *ChainerLogger) DPanic(args ...interface{}) {
 }
 
 func (cl *ChainerLogger) DPanicf(template string, args ...interface{}) {
-	cl.sl.DPanicf(template, args)
+	cl.sl.DPanicf(template, args...)
 }
 
 func (cl *ChainerLogger) DPanicw(msg string, kvs ...interface{}) {
@@ -119,7 +119,7 @@ func (cl *ChainerLogger) Panic(args ...interface{}) {
 }
 
 func (cl *ChainerLogger) Panicf(template string, args ...interface{}) {
-	cl.sl.Panicf(template, args)
+	cl.sl.Panicf(template, args...)
 }
 
 func (cl *ChainerLogger) Panicw(msg string, kvs ...interface{}) {
