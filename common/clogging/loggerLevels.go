@@ -29,7 +29,7 @@ func (l *LoggerLevels) DefaultLevel() zapcore.Level {
 }
 
 // ActivateSpec 处理的字符串形式为："xx.yy.zz=level1:level2:aa.bb=level3"，其中等于号 `=` 的两边分别表示日志记录器名和日志级别，
-// 等式表示为日志记录器设置对应的日志级别，`xx.yy.xx` 里的点号 `.` 可以看作是日志记录器的取名方式，类比网址，层层递进的那种关系，可
+// 等式表示为日志记录器设置对应的日志级别，`xx.yy.zz` 里的点号 `.` 可以看作是日志记录器的取名方式，类比网址，层层递进的那种关系，可
 // 以将 `xx.yy` 看成是 `xx` 的子日志记录器的名称。`level2` 没有与之对应的日志记录器，那么 `level2` 会被看作是默认的日志级别，会赋
 // 值给 LoggerLevel 的 defaultLevel 字段。`xx.yy.zz=level1` 与 `aa.bb=level3` 会被 LoggerLevel 的 specs 字段存储，其中 `xx.yy.zz`
 // 与 `aa.bb` 会被当成 map 的 key，`level1` 和 `level3` 则会被当成对应的 value。`level1 level2 level3` 里级别最小的会被赋值给

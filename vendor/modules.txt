@@ -64,16 +64,22 @@ go.uber.org/atomic
 go.uber.org/multierr
 # go.uber.org/zap v1.19.1
 ## explicit; go 1.13
+go.uber.org/zap
 go.uber.org/zap/buffer
 go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
+go.uber.org/zap/zapgrpc
 # golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+# google.golang.org/grpc v1.40.0
+## explicit; go 1.11
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/internal/grpclog
 # google.golang.org/protobuf v1.28.1
 ## explicit; go 1.11
 google.golang.org/protobuf/encoding/prototext

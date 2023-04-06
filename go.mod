@@ -8,6 +8,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/sykesm/zap-logfmt v0.0.4
 	go.uber.org/zap v1.19.1
+	google.golang.org/grpc v1.40.0
 )
 
 require (
